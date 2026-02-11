@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .qr-display {
+            text-align: center;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .qr-display img {
+            max-width: 400px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .qr-display h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .session-code {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+            letter-spacing: 3px;
+        }
+
+        .sessions-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .session-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .session-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .session-card p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .session-card .session-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .session-card .session-actions button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .attendance-list {
+            margin-top: 20px;
+        }
+
+        .attendance-item {
+            padding: 15px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .attendance-item .user-info {
+            flex: 1;
+        }
+
+        .attendance-item .user-info strong {
+            display: block;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .attendance-item .user-info small {
+            color: #666;
+        }
+
+        .scanner-section {
+            text-align: center;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 QR Attendance System</h1>
+            <p>Modern attendance tracking with QR codes</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('create')">Create Session</button>
+            <button class="tab-button" onclick="switchTab('scan')">Scan QR Code</button>
+            <button class="tab-button" onclick="switchTab('sessions')">View Sessions</button>
+        </div>
+
+        <!-- Create Session Tab -->
+        <div id="create" class="tab-content active">
+            <h2>Create New Attendance Session</h2>
+            <div id="createMessage"></div>
+            <form id="createSessionForm">
+                <div class="form-group">
+                    <label for="sessionName">Session Name *</label>
+                    <input type="text" id="sessionName" required placeholder="e.g., Monday Morning Class">
+                </div>
+                <div class="form-group">
+                    <label for="sessionDescription">Description</label>
+                    <textarea id="sessionDescription" rows="3" placeholder="Optional session description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="sessionDate">Date</label>
+                    <input type="date" id="sessionDate">
+                </div>
+                <button type="submit" class="btn">Generate QR Code</button>
+            </form>
+
+            <div id="qrResult" style="display: none;" class="qr-display">
+                <h3>Session Created Successfully!</h3>
+                <div class="session-code" id="displayCode"></div>
+                <img id="qrCodeImage" alt="QR Code">
+                <p><strong>Session:</strong> <span id="displayName"></span></p>
+                <p><strong>Session ID:</strong> <span id="displayId"></span></p>
+                <button class="btn btn-secondary" onclick="downloadQR()">Download QR Code</button>
+            </div>
+        </div>
+
+        <!-- Scan QR Code Tab -->
+        <div id="scan" class="tab-content">
+            <h2>Mark Attendance</h2>
+            <div id="scanMessage"></div>
+            <form id="attendanceForm">
+                <div class="form-group">
+                    <label for="scanSessionId">Session ID (from QR code) *</label>
+                    <input type="text" id="scanSessionId" required placeholder="Paste session ID or scan QR">
+                </div>
+                <div class="form-group">
+                    <label for="userName">Your Name *</label>
+                    <input type="text" id="userName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" placeholder="your.email@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="userId">Student/Employee ID</label>
+                    <input type="text" id="userId" placeholder="Your ID number">
+                </div>
+                <button type="submit" class="btn">Mark Attendance</button>
+            </form>
+        </div>
+
+        <!-- View Sessions Tab -->
+        <div id="sessions" class="tab-content">
+            <h2>All Sessions</h2>
+            <button class="btn" onclick="loadSessions()">Refresh</button>
+            <div id="sessionsList" class="sessions-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentQRData = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'sessions') {
+                loadSessions();
+            }
+        }
+
+        // Create session
+        document.getElementById('createSessionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('createMessage');
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('sessionName').value,
+                        description: document.getElementById('sessionDescription').value,
+                        date: document.getElementById('sessionDate').value || new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentQRData = data;
+                    document.getElementById('qrCodeImage').src = data.qrCodeUrl;
+                    document.getElementById('displayCode').textContent = data.session.code;
+                    document.getElementById('displayName').textContent = data.session.name;
+                    document.getElementById('displayId').textContent = data.session.id;
+                    document.getElementById('qrResult').style.display = 'block';
+
+                    messageDiv.innerHTML = '<div class="message success">Session created successfully!</div>';
+                    document.getElementById('createSessionForm').reset();
+                } else {
+                    messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            }
+        });
+
+        // Mark attendance
+        document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('scanMessage');
+
+            try {
+                const response = await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: document.getElementById('scanSessionId').value,
+                        userName: document.getElementById('userName').value,
+                        userEmail: document.getElementById('userEmail').value,
+                        userId: document.getElementById('userId').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.innerHTML = '<div class="message success">✓ Attendance marked successfully!</div>';
+                    document.getElementById('attendanceForm').reset();
+                } else {
+                    messageDiv.innerHTML = `<div class="message error">✗ ${data.error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            }
+        });
+
+        // Load all sessions
+        async function loadSessions() {
+            const listDiv = document.getElementById('sessionsList');
+            listDiv.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch('/api/sessions');
+                const data = await response.json();
+
+                if (data.success && data.sessions.length > 0) {
+                    listDiv.innerHTML = data.sessions.map(session => `
+                        <div class="session-card">
+                            <h3>${session.name}</h3>
+                            <p><strong>Code:</strong> ${session.code}</p>
+                            <p><strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}</p>
+                            <p><strong>Status:</strong> <span class="status-badge ${session.active ? 'status-active' : 'status-inactive'}">${session.active ? 'Active' : 'Inactive'}</span></p>
+                            <p><strong>Session ID:</strong> ${session.id}</p>
+                            <div class="session-actions">
+                                <button class="btn" onclick="viewAttendance('${session.id}')">View Attendance</button>
+                                <button class="btn btn-secondary" onclick="toggleSession('${session.id}')">${session.active ? 'Deactivate' : 'Activate'}</button>
+                                <button class="btn btn-secondary" onclick="exportAttendance('${session.id}')">Export CSV</button>
+                            </div>
+                            <div id="attendance-${session.id}"></div>
+                        </div>
+                    `).join('');
+                } else {
+                    listDiv.innerHTML = `
+                        <div class="empty-state">
+                            <p style="font-size: 1.2em;">No sessions created yet</p>
+                            <p>Create your first session to get started!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<div class="message error">Error loading sessions: ${error.message}</div>`;
+            }
+        }
+
+        // View attendance for a session
+        async function viewAttendance(sessionId) {
+            const attendanceDiv = document.getElementById(`attendance-${sessionId}`);
+
+            try {
+                const response = await fetch(`/api/attendance/${sessionId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.records.length > 0) {
+                        attendanceDiv.innerHTML = `
+                            <div class="attendance-list">
+                                <h4>Attendance Records (${data.count})</h4>
+                                ${data.records.map(record => `
+                                    <div class="attendance-item">
+                                        <div class="user-info">
+                                            <strong>${record.userName}</strong>
+                                            <small>${record.userEmail || 'No email'} | ID: ${record.userId || 'N/A'}</small>
+                                            <small style="display: block; margin-top: 5px;">Marked at: ${new Date(record.timestamp).toLocaleString()}</small>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        attendanceDiv.innerHTML = '<p style="margin-top: 15px; color: #999;">No attendance records yet</p>';
+                    }
+                }
+            } catch (error) {
+                attendanceDiv.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Toggle session active status
+        async function toggleSession(sessionId) {
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}/toggle`, {
+                    method: 'PATCH'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadSessions();
+                }
+            } catch (error) {
+                alert('Error toggling session: ' + error.message);
+            }
+        }
+
+        // Export attendance as CSV
+        function exportAttendance(sessionId) {
+            window.location.href = `/api/attendance/${sessionId}/export`;
+        }
+
+        // Download QR code
+        function downloadQR() {
+            if (currentQRData) {
+                const link = document.createElement('a');
+                link.download = `qr-code-${currentQRData.session.code}.png`;
+                link.href = currentQRData.qrCodeUrl;
+                link.click();
+            }
+        }
+
+        // Set today's date as default
+        document.getElementById('sessionDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>
